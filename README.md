@@ -1,9 +1,3 @@
-
-
-
-
-
-
 # Setup
 
 ## Requirements
