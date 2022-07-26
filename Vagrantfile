@@ -15,8 +15,8 @@ end
 
 GB=1024
 
-IP_PREFIX="172.22.22" # vbox virtual bridge
-#IP_PREFIX="172.55.55" # libvirt virtual bridge
+IP_PREFIX="192.168.56" # vbox virtual bridge  TODO: adapt to your machine ip
+#IP_PREFIX="192.168.56" # libvirt virtual bridge
 
 NODE_RAM=2048
 MASTER_RAM=4096
@@ -24,12 +24,12 @@ DISK_SIZE=10*GB
 ADD_DISK_FLAG=false
 
 MACHINES= [
-  { name: "control" , ip: ip(101), primary: true , cpus: 4, mem: 1024      , add_disk: false },
-  { name: "facility", ip: ip(141), primary: false, cpus: 2, mem: 1024      , add_disk: false },
-  { name: "master"  , ip: ip(122), primary: false, cpus: 4, mem: MASTER_RAM, add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
-  { name: "node1"   , ip: ip(131), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
-  { name: "node2"   , ip: ip(132), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
-  { name: "node3"   , ip: ip(133), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
+  { name: "control" , ip: ip(16), primary: true , cpus: 4, mem: 1024      , add_disk: false },
+  { name: "facility", ip: ip(17), primary: false, cpus: 2, mem: 1024      , add_disk: false },
+  { name: "master"  , ip: ip(18), primary: false, cpus: 4, mem: MASTER_RAM, add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
+  { name: "node1"   , ip: ip(19), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
+  { name: "node2"   , ip: ip(20), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
+  { name: "node3"   , ip: ip(21), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
 ]
 
 ANSIBLE_VARS="ansible/inventory/vars.yml"

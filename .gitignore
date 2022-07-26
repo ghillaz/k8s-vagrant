@@ -4,3 +4,5 @@
 ansible/.facts/
 ansible/tmp/
 rsrc/
+
+.idea/
