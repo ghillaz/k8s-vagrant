@@ -6,3 +6,4 @@ ansible/tmp/
 rsrc/
 
 .idea/
+/tmp

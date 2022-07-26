@@ -15,30 +15,25 @@ end
 
 GB=1024
 
-IP_PREFIX="192.168.56" # vbox virtual bridge  TODO: adapt to your machine ip
-#IP_PREFIX="192.168.56" # libvirt virtual bridge
+IP_PREFIX="192.168.56" # vbox virtual bridge
+#IP_PREFIX="172.55.55" # libvirt virtual bridge
 
-NODE_RAM=2048
-MASTER_RAM=4096
+SERVER_MEM=8*GB
 DISK_SIZE=10*GB
-ADD_DISK_FLAG=false
 
 MACHINES= [
-  { name: "control" , ip: ip(16), primary: true , cpus: 4, mem: 1024      , add_disk: false },
-  { name: "facility", ip: ip(17), primary: false, cpus: 2, mem: 1024      , add_disk: false },
-  { name: "master"  , ip: ip(18), primary: false, cpus: 4, mem: MASTER_RAM, add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
-  { name: "node1"   , ip: ip(19), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
-  { name: "node2"   , ip: ip(20), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
-  { name: "node3"   , ip: ip(21), primary: false, cpus: 4, mem: NODE_RAM  , add_disk: ADD_DISK_FLAG, size: DISK_SIZE },
+  { name: "server"     , ip: ip(10), primary: true , cpus: 8, mem: SERVER_MEM, add_disk: true, size: '10240' },
 ]
 
 ANSIBLE_VARS="ansible/inventory/vars.yml"
 
 
-Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu1804"
 
-  # we want to run graphical tools from machines
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "artem-sidorenko/mint-18.1-cinnamon"
+
+
   config.ssh.forward_x11 = true
   config.ssh.forward_agent = true
 
@@ -58,10 +53,10 @@ Vagrant.configure("2") do |config|
   config.hostmanager.enabled = true
   config.hostmanager.manage_guest = true
 
-  config.vm.provider :libvirt do |libvirt|
-    # Avoid "Call to virDomainCreateWithFlags failed: unsupported configuration: host doesn't support invariant TSC" error when using snapshots
-    libvirt.cpu_mode = 'host-passthrough'   
-  end
+  # config.vm.provider :libvirt do |libvirt|
+  #   # Avoid "Call to virDomainCreateWithFlags failed: unsupported configuration: host doesn't support invariant TSC" error when using snapshots
+  #   libvirt.cpu_mode = 'host-passthrough'   
+  # end
 
   MACHINES.each do |m|
     node = m[:name]
@@ -75,11 +70,17 @@ Vagrant.configure("2") do |config|
         libvirt.cpus = m[:cpus]
         libvirt.storage :file, :device => 'vdb', :size => '20G', :type => 'qcow2', :cache => 'writeback' if m[:add_disk]
       end
+      # c.vm.provider :libvirt do |libvirt|
+      #   libvirt.memory = m[:mem]
+      #   libvirt.cpus = m[:cpus]
+      #   libvirt.storage :file, :device => 'vdb', :size => '20G', :type => 'qcow2', :cache => 'writeback' if m[:add_disk]
+      # end
 
       c.vm.provider "virtualbox" do |vb|
         vb.cpus = m[:cpus]
         vb.memory = m[:mem]
         
+        add_disk vb, c.vm.hostname, m[:size], 0, 1 if m[:add_disk]
         add_disk vb, c.vm.hostname, m[:size], 1, 0 if m[:add_disk]
         add_disk vb, c.vm.hostname, m[:size], 1, 1 if m[:add_disk]
       end
@@ -88,7 +89,6 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "shell", name: "link-vagrant", path: "lib/exec/link-vagrant"
-  config.vm.provision "shell", name: "install-ansible", path: "lib/exec/install-ansible"
   config.vm.provision "shell", name: "set-ssh-key", path: "lib/exec/set-ssh-key"
 
 end
@@ -149,6 +149,26 @@ def create_ssh_key()
     end
   end
 end
+
+
+def disk_name(hostname, suffix)
+  base_dir = '.vagrant/disks/' + hostname
+  FileUtils.mkdir_p base_dir
+  base_dir + '/disk' + suffix + '.vdi'
+end
+
+
+def add_disk(vb, hostname, size, port, dev)
+  disk = disk_name(hostname, "#{port}-#{dev}")
+
+  unless File.exist?(disk)
+    vb.customize ['createhd', '--filename', disk, '--variant', 'Standard', '--size', size]
+  end
+
+  vb.customize ['storageattach', :id,  '--storagectl', 'IDE Controller', '--port', port, '--device', dev, '--type', 'hdd', '--medium', disk]
+end
+
+
 
 
 install_plugins required_plugins
