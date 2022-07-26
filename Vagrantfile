@@ -165,7 +165,7 @@ def add_disk(vb, hostname, size, port, dev)
     vb.customize ['createhd', '--filename', disk, '--variant', 'Standard', '--size', size]
   end
 
-  vb.customize ['storageattach', :id,  '--storagectl', 'IDE Controller', '--port', port, '--device', dev, '--type', 'hdd', '--medium', disk]
+  vb.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', port, '--device', dev, '--type', 'hdd', '--medium', disk]
 end
 
 
